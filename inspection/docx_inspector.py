@@ -1,3 +1,4 @@
+import argparse
 import os
 import zipfile
 import json
@@ -111,7 +112,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-def get_report_data(docx_path):
+def get_report_data(docx_path, output_dir):
     data = {
         "filename": os.path.basename(docx_path),
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -156,22 +157,25 @@ def get_report_data(docx_path):
         data["tables"].append(t_data)
 
     # ZIP Structure & Media
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    media_dir = os.path.join(base_dir, "extracted_media")
+    media_dir = os.path.join(output_dir, "extracted_media")
     os.makedirs(media_dir, exist_ok=True)
     
-    with zipfile.ZipFile(docx_path, 'r') as z:
-        for filename in z.namelist():
-            info = z.getinfo(filename)
-            data["internal_files"].append(f"{filename} ({info.file_size} bytes)")
-            
-            if filename.startswith('word/media/') or filename.startswith('word/embeddings/'):
-                z.extract(filename, media_dir)
-                data["media_extracted"].append(filename)
+    try:
+        with zipfile.ZipFile(docx_path, 'r') as z:
+            for filename in z.namelist():
+                info = z.getinfo(filename)
+                data["internal_files"].append(f"{filename} ({info.file_size} bytes)")
+                
+                if filename.startswith('word/media/') or filename.startswith('word/embeddings/'):
+                    z.extract(filename, media_dir)
+                    data["media_extracted"].append(filename)
+    except zipfile.BadZipFile:
+        print(f"Error: {docx_path} no es un archivo DOCX (ZIP) válido.")
+        exit(1)
 
     return data
 
-def generate_html(data):
+def generate_html(data, report_path):
     meta_html = "".join([f'<div class="meta-item"><div class="meta-label">{m["label"]}</div><div>{m["value"]}</div></div>' for m in data["metadata"]])
     
     para_html = ""
@@ -213,26 +217,41 @@ def generate_html(data):
         media_list=media_list
     )
     
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    report_path = os.path.join(base_dir, "report.html")
-    
+    os.makedirs(os.path.dirname(os.path.abspath(report_path)), exist_ok=True)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
     
     print(f"\n[!] Informe generado exitosamente en: {report_path}")
 
 if __name__ == "__main__":
-    # Check if docx exists in current dir (inspection/) or parent dir
-    #target = "Documentacion_Tecnica_Agente_Analizador_RFP_AMAIA_Studio_v5.docx"
-    target = "1. Artificial Intelligence - Copia.docx"
+    parser = argparse.ArgumentParser(description="Inspecciona un archivo DOCX y genera un informe HTML detallado.")
+    parser.add_argument("input", help="Ruta al archivo .docx a inspeccionar")
+    parser.add_argument("-o", "--output", help="Ruta de salida para el informe HTML (por defecto report.html en el directorio del input)")
+    
+    args = parser.parse_args()
+    
+    target = args.input
     if not os.path.exists(target):
-        parent_target = os.path.join("..", target)
-        if os.path.exists(parent_target):
-            target = parent_target
+        print(f"Error: No se encontró el archivo {target}")
+        exit(1)
+        
+    print(f"Procesando: {target}...")
+    
+    if args.output:
+        # If output is a .html file, use its directory for results
+        if args.output.lower().endswith(".html"):
+            output_dir = os.path.dirname(os.path.abspath(args.output))
+            report_out = args.output
         else:
-            print(f"Error: No se encontró el archivo {target}")
-            exit(1)
-            
-    print(f"Buscando y procesando: {target}...")
-    data = get_report_data(target)
-    generate_html(data)
+            # Otherwise treat it as a directory
+            output_dir = os.path.abspath(args.output)
+            report_out = os.path.join(output_dir, "report.html")
+    else:
+        # Default output directory next to the input file
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(target)), "inspection_results")
+        report_out = os.path.join(output_dir, "report.html")
+
+    os.makedirs(output_dir, exist_ok=True)
+    
+    data = get_report_data(target, output_dir)
+    generate_html(data, report_out)

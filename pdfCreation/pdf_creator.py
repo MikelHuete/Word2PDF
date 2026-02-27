@@ -1,3 +1,4 @@
+import argparse
 import os
 from docx import Document
 from reportlab.lib.pagesizes import A4
@@ -179,14 +180,44 @@ class PDFCreator:
         print(f"PDF Successfully created at: {self.output_path}")
 
 if __name__ == "__main__":
-    input_file = "1. Artificial Intelligence - Copia.docx"
-    output_file = os.path.join("pdfCreation", "generated_styled.pdf")
+    parser = argparse.ArgumentParser(description="Convierte un archivo DOCX a un PDF con estilo personalizado.")
+    parser.add_argument("input", help="Ruta al archivo .docx de entrada")
+    parser.add_argument("-o", "--output", help="Ruta de salida para el PDF (por defecto [input].pdf)")
+    parser.add_argument("--cover", help="Ruta a la imagen de portada")
     
-    img1 = os.path.join("pdfCreation", "portada.jpg")
+    args = parser.parse_args()
     
+    input_file = args.input
     if not os.path.exists(input_file):
-        input_file = os.path.join("..", input_file)
-    if not os.path.exists(img1):
-        img1 = os.path.join("..", "extracted_media", "word", "media", "portada.jpg")     
+        print(f"Error: No se encontró el archivo de entrada {input_file}")
+        exit(1)
+        
+    if args.output:
+        output_file = args.output
+    else:
+        output_file = os.path.splitext(input_file)[0] + ".pdf"
+        
+    # Ensure output directory exists
+    output_dir = os.path.dirname(os.path.abspath(output_file))
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    
+    img1 = args.cover
+    if not img1:
+        # Try to find default cover in common locations
+        img1_candidates = [
+            os.path.join(os.path.dirname(os.path.abspath(input_file)), "portada.jpg"),
+            os.path.join("pdfCreation", "portada.jpg"),
+            os.path.join("extracted_media", "word", "media", "portada.jpg")
+        ]
+        for candidate in img1_candidates:
+            if os.path.exists(candidate):
+                img1 = candidate
+                break
+    
+    if img1 and not os.path.exists(img1):
+        print(f"Aviso: No se encontró la imagen de portada en {img1}. Se generará el PDF sin ella.")
+        img1 = None
+        
     creator = PDFCreator(input_file, output_file, img1_path=img1)
     creator.create_pdf()
