@@ -2,7 +2,7 @@
 
 Este proyecto proporciona herramientas avanzadas para la inspección de archivos DOCX y su conversión a documentos PDF con estilos personalizados y profesionales.
 
-## 🚀 Características Principales
+## Características Principales
 
 ### 1. Inspección de Documentos (`inspection/`)
 El módulo de inspección permite analizar la estructura interna de cualquier archivo `.docx`.
@@ -22,7 +22,7 @@ El motor de conversión transforma archivos `.docx` en PDFs con un diseño moder
     - **Header 2**: Magenta Bold.
     - **Header 3**: Azul Marino.
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 doc2pdf/
@@ -37,7 +37,7 @@ doc2pdf/
 └── README.md                 # Documentación del proyecto
 ```
 
-## 🛠️ Requisitos
+## Requisitos
 
 - Python 3.10+
 - Librerías:
@@ -49,7 +49,7 @@ Instalación:
 pip install python-docx reportlab
 ```
 
-## 📖 Uso
+## Uso
 
 ### Generar Informe de Inspección
 Ejecuta el script desde la carpeta raíz:
