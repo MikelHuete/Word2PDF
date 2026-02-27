@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Inspección DOCX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #f1f5f9;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+        h1 { font-weight: 700; color: var(--primary); margin: 0; }
+        .timestamp { color: var(--text-muted); font-size: 0.9rem; }
+        
+        .section {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid var(--border);
+        }
+        h2 { border-left: 4px solid var(--primary); padding-left: 12px; font-size: 1.25rem; margin-top: 0; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .meta-item { border-bottom: 1px solid var(--border); padding: 8px 0; }
+        .meta-label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
+        
+        .para { margin-bottom: 16px; padding: 12px; border-radius: 6px; background: var(--accent); }
+        .para-style { font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-bottom: 4px; }
+        .run { display: inline-block; margin-right: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        th { background: var(--accent); font-weight: 600; }
+        
+        .file-list { font-family: monospace; font-size: 0.85rem; background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; }
+        .file-item { margin-bottom: 4px; }
+
+        .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 4px; }
+        .tag-bold { background: #fee2e2; color: #991b1b; }
+        .tag-italic { background: #fef9c3; color: #854d0e; }
+        .tag-size { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Informe de Inspección DOCX</h1>
+            <div class="timestamp">Generado el: 2026-02-27 11:09:08 | Archivo: 1. Artificial Intelligence - Copia.docx</div>
+        </header>
+
+        <div class="section">
+            <h2>Metadatos</h2>
+            <div class="grid"><div class="meta-item"><div class="meta-label">author</div><div>Arnaud Van Echelpoel</div></div><div class="meta-item"><div class="meta-label">created</div><div>2025-11-25 06:11:00+00:00</div></div><div class="meta-item"><div class="meta-label">last_modified_by</div><div>Huete-Sanchez Mikel</div></div><div class="meta-item"><div class="meta-label">modified</div><div>2026-02-26 13:18:03+00:00</div></div><div class="meta-item"><div class="meta-label">revision</div><div>11</div></div></div>
+        </div>
+
+        <div class="section" id="content">
+            <h2>Contenido y Estilos (Párrafos)</h2>
+            <div class="para"><div class="para-style">Title</div><span class="run">What is Artificial Intelligence (AI)?</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">Purpose of the Lesson</span></div><div class="para"><div class="para-style">Normal</div><span class="run">After this lesson, you will understand the fundamental definition of Artificial Intelligence, the core elements that make AI 'intelligent', and how AI differs from simple automation.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">1. The Definition of AI</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Artificial Intelligence (AI)<span class="tag tag-bold">B</span></span><span class="run"> is a field of computer science that focuses on creating systems or machines that can perform tasks that, if done by humans, would require intelligence. It can be seen as the science and engineering of creating intelligent machines, specifically intelligent computer programs.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">In short, AI is about making computers so 'smart' that they are able to perceive their environment, reason about information, learn from experiences, and make decisions or take actions.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Not all AI systems perform all of these functions at the same time. Some only perceive and reason, while others may also learn or act.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Analogy for beginners:<span class="tag tag-bold">B</span></span><span class="run"> Think about how to teach a dog to play fetch. You throw the ball and encourage the dog to bring it back. After a few attempts, the dog learns what you want. AI systems learn from examples and experiences in a similar way, but instead of rewards, they use data and algorithms</span><span class="run">.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">2</span><span class="run">. The Core Elements of AI</span></div><div class="para"><div class="para-style">Normal</div><span class="run">To understand the definition, we look at the most important characteristics:</span></div><div class="para"><div class="para-style">Heading 3</div><span class="run">A. Simulation of Intelligence</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI aims to replicate or simulate aspects of human intelligence. This includes abilities such as:</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Recognizing patterns.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Troubleshooting.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Understanding language.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Learning from experience.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Making decisions or recommendations.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI simulates these abilities through mathematical models and algorithms, not through human understanding or consciousness.</span></div><div class="para"><div class="para-style">Heading 3</div><span class="run">B. Task performance</span></div><div class="para"><div class="para-style">Normal</div><span class="run">The tasks that AI systems perform range from simple (such as sorting emails) to very complex (such as diagnosing illnesses or driving). What makes these tasks 'intelligent' is that they traditionally require human expertise or brainpower.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI systems are usually designed for specific tasks rather than general human-like intelligence.</span></div><div class="para"><div class="para-style">Heading 3</div><span class="run">C. Autonomy and adaptation</span></div><div class="para"><div class="para-style">Normal</div><span class="run">A core component of AI is its ability to operate with a certain degree of </span><span class="run">autonomy<span class="tag tag-bold">B</span></span><span class="run">. This means that the system can make choices or take actions without being explicitly programmed for every possible scenario. Additionally, AI systems can adapt, improving their performance as they gain more experience or process more data.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">The level of autonomy varies widely, from fully human-controlled systems to systems that act independently within defined boundaries.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">3</span><span class="run">. How a System Becomes 'Intelligent'</span></div><div class="para"><div class="para-style">Normal</div><span class="run">A system is considered to have artificial intelligence if it can perform the following four fundamental steps:</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Perceive:<span class="tag tag-bold">B</span></span><span class="run"> Collect information from the environment, for example via sensors, microphones or cameras.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Reasoning:<span class="tag tag-bold">B</span></span><span class="run"> Processing and interpreting that information to draw conclusions or make decisions.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Learn: Improve<span class="tag tag-bold">B</span></span><span class="run"> performance over time by learning from data or experience.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Act:<span class="tag tag-bold">B</span></span><span class="run"> Taking actions or making recommendations based on reasoning.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Not every AI system includes all four steps; many systems focus on only a subset.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">4</span><span class="run">. The Role of Data and Algorithms</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI relies on two main components:</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Data:<span class="tag tag-bold">B</span></span><span class="run"> Information from the world that is used for learning.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Algorithms:<span class="tag tag-bold">B</span></span><span class="run"> Sets of instructions or rules that are used to process that data, recognize patterns, and make predictions or decisions.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI uses mathematical formulas and algorithms that use statistics and probability to mimic cognitive functions such as decision-making.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI is an umbrella term that includes fields such as </span><span class="run">Machine Learning (ML)<span class="tag tag-bold">B</span></span><span class="run"> and </span><span class="run">Deep Learning (DL):<span class="tag tag-bold">B</span></span></div><div class="para"><div class="para-style">Normal</div><span class="run">Machine Learning:<span class="tag tag-bold">B</span></span><span class="run"> Enables machines to learn from data and improve their performance, leading to data analysis and optimization. This learning process often consists of a </span><span class="run">training phase<span class="tag tag-bold">B</span></span><span class="run"> (where the model learns from existing data) and an </span><span class="run">evaluation phase<span class="tag tag-bold">B</span></span><span class="run"> (where the model has to classify new data to achieve the desired result).</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Deep Learning:<span class="tag tag-bold">B</span></span><span class="run"> This is inspired by the functioning of the human brain</span><span class="run">,</span><span class="run">biological neural structures and implemented using artificial neural networks.</span><span class="run">These networks are powerful at processing and interpreting vast amounts of complex data, which is necessary for tasks such as classification, prediction, and image processing.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">5</span><span class="run">. What AI is NOT (</span><span class="run">Key Misconceptions</span><span class="run">)</span></div><div class="para"><div class="para-style">Normal</div><span class="run">To avoid confusion, it's important to know what AI is not:</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Not Just Automation:<span class="tag tag-bold">B</span></span><span class="run"> Simple automation (like a washing machine that runs through a fixed cycle) is not AI. AI requires a certain amount of 'thinking', where the system analyses, learns or adapts.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Non-Human Intelligence:<span class="tag tag-bold">B</span></span><span class="run"> AI processes information and makes decisions based on rules and data. AI does not 'feel' or 'think' like a human, it lacks emotions and intuition</span><span class="run">, </span><span class="run">consciousness, and self-awareness. </span></div><div class="para"><div class="para-style">Normal</div><span class="run">AI intelligence is functional, not experiential.</span></div><div class="para"><div class="para-style">Heading 2</div><span class="run">6</span><span class="run">. AI in Everyday Life (Examples)</span></div><div class="para"><div class="para-style">Normal</div><span class="run">You probably interact with AI on a daily basis without realizing it:</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Imagine an AI system as an extremely organized, high-speed librarian. That librarian has read billions of books (data) and, thanks to complex indexes (algorithms), can quickly find the right information, discover patterns in what people read, and autonomously decide which new book to recommend to you based on your history</span><span class="run">, </span><span class="run">but the librarian doesn't 'feel' joy in finding the perfect book.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">This illustrates both the power and the limits of Artificial Intelligence.</span></div><div class="para"><div class="para-style">Normal</div><span class="run">Artificial Intelligence is about data-driven systems that can perceive, reason, learn, and act.</span><span class="run"> It is not human intelligence, but it enables machines to solve complex problems at scale.</span></div>
+        </div>
+
+        <div class="section">
+            <h2>Tablas Detectadas</h2>
+            <h3>Tabla 0</h3><table><tr><th>AI Application</th><th>What it does (Requires Intelligence)</th><th>Core capabilities</th></tr><tr><td>Voice assistant (Siri/Google)</td><td>Recognizes spoken language, understands the intention, looks for an answer and responds.</td><td>Perceiving (speech), Reasoning (understanding), Acting (answering).</td></tr><tr><td>Spamfilters</td><td>Scans patterns in emails and decides which ones are unwanted, learning from millions of examples.</td><td>Reasoning, learning.</td></tr><tr><td>Netflix Recommendations</td><td>Analyzes viewing behavior and predicts what you will like most.</td><td>Learning, Reasoning (prediction).</td></tr><tr><td>Face unlock</td><td>Compares your face to saved footage to grant access.</td><td>Perceiving (image processing), Reasoning (comparison).</td></tr><tr><td>Self-driving cars</td><td>'See' the way, read signs, and avoid obstacles.</td><td>Perceiving (sensors), reasoning, acting.</td></tr><tr><td>Financial Fraud Detection</td><td>Monitors and detects suspicious credit card payments in real-time.</td><td>Learning, Reasoning (detection).</td></tr><tr><td>Chess computers</td><td>Analyze the board and choose the optimal move, often faster than a human.</td><td>Reasoning.</td></tr></table>
+        </div>
+
+        <div class="section">
+            <h2>Estructura Interna (ZIP Limit Testing)</h2>
+            <p>Total de archivos internos: <strong>30</strong></p>
+            <div class="file-list"><div class="file-item">_rels/.rels (883 bytes)</div><div class="file-item">word/document.xml (34192 bytes)</div><div class="file-item">word/_rels/document.xml.rels (2027 bytes)</div><div class="file-item">word/footnotes.xml (3201 bytes)</div><div class="file-item">word/endnotes.xml (3195 bytes)</div><div class="file-item">word/footer1.xml (2772 bytes)</div><div class="file-item">word/footer2.xml (2772 bytes)</div><div class="file-item">word/footer3.xml (2772 bytes)</div><div class="file-item">word/theme/theme1.xml (8628 bytes)</div><div class="file-item">word/settings.xml (5947 bytes)</div><div class="file-item">[trash]/0000.dat (1749 bytes)</div><div class="file-item">customXml/itemProps1.xml (201 bytes)</div><div class="file-item">customXml/item2.xml (219 bytes)</div><div class="file-item">customXml/itemProps2.xml (335 bytes)</div><div class="file-item">[trash]/0001.dat (235 bytes)</div><div class="file-item">customXml/itemProps3.xml (425 bytes)</div><div class="file-item">word/numbering.xml (30055 bytes)</div><div class="file-item">word/styles.xml (45042 bytes)</div><div class="file-item">word/webSettings.xml (2761 bytes)</div><div class="file-item">word/fontTable.xml (3479 bytes)</div><div class="file-item">docProps/core.xml (694 bytes)</div><div class="file-item">docProps/app.xml (679 bytes)</div><div class="file-item">docProps/custom.xml (2093 bytes)</div><div class="file-item">docMetadata/LabelInfo.xml (307 bytes)</div><div class="file-item">customXml/_rels/item1.xml.rels (296 bytes)</div><div class="file-item">customXml/_rels/item2.xml.rels (296 bytes)</div><div class="file-item">customXml/_rels/item3.xml.rels (296 bytes)</div><div class="file-item">customXml/item1.xml (12356 bytes)</div><div class="file-item">customXml/item3.xml (587 bytes)</div><div class="file-item">[Content_Types].xml (2733 bytes)</div></div>
+        </div>
+        
+        <div class="section">
+            <h2>Medios y Archivos Incrustados</h2>
+            <p>No se encontraron medios incrustados.</p>
+            <ul></ul>
+        </div>
+    </div>
+</body>
+</html>
