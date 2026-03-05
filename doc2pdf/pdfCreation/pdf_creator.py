@@ -11,6 +11,7 @@ import shutil
 
 from docx.text.paragraph import Paragraph as DocxParagraph
 from docx.table import Table as DocxTable
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 # THE BRAND COLORS
 MAGENTA = "#DA1984"
@@ -168,10 +169,44 @@ class PDFCreator:
                 para_images = []
                 for run in para.runs:
                     blips = run._element.xpath('.//a:blip')
+                    drawings = run._element.xpath('.//w:drawing')
+                    blip_sizes = {}
+                    
+                    for drawing in drawings:
+                        extents = drawing.xpath('.//wp:extent')
+                        d_blips = drawing.xpath('.//a:blip')
+                        if d_blips and extents:
+                            d_rId = d_blips[0].get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed')
+                            cx = extents[0].get('cx')
+                            cy = extents[0].get('cy')
+                            
+                            # Extract drawing alignment
+                            d_align = None
+                            align_tags = drawing.xpath('.//wp:positionH/wp:align')
+                            if not align_tags:
+                                align_tags = drawing.xpath('.//wp:inline/wp:align')
+                            if not align_tags:
+                                # Fallback to any align tag inside drawing
+                                align_tags = drawing.xpath('.//*[local-name()="align"]')
+                                
+                            if align_tags:
+                                d_align = align_tags[0].text.upper()
+                                
+                            if cx and cy:
+                                blip_sizes[d_rId] = {
+                                    'size': (int(cx), int(cy)),
+                                    'align': d_align
+                                }
+
                     for blip in blips:
                         rId = blip.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed')
                         if rId in self.extracted_images:
-                            para_images.append(self.extracted_images[rId])
+                            img_info = blip_sizes.get(rId, {})
+                            para_images.append({
+                                'path': self.extracted_images[rId],
+                                'size': img_info.get('size'),
+                                'align': img_info.get('align')
+                            })
 
                 text = para.text.strip()
                 style_name = para.style.name
@@ -194,43 +229,115 @@ class PDFCreator:
                     first_title = False
                     continue
 
-                # Case 2: Side-by-Side (Text + Image)
                 if text and para_images:
-                    img_path = para_images[0] # Use the first image for side-by-side
+                    img_path = para_images[0]['path']
                     try:
                         img = PlatypusImage(img_path)
                         aspect = img.imageHeight / float(img.imageWidth)
                         
-                        # Calculate widths for 2-column layout (65% text, 35% image)
-                        col1_width = pdf.width * 0.62
-                        col2_width = pdf.width * 0.35
+                        col_img_width = pdf.width * 0.35
+                        col_text_width = pdf.width * 0.62
                         
-                        img.drawWidth = col2_width
-                        img.drawHeight = col2_width * aspect
+                        img.drawWidth = col_img_width
+                        img.drawHeight = col_img_width * aspect
                         
-                        # Create a table for side-by-side
-                        data = [[Paragraph(text, p_style), img]]
-                        t = Table(data, colWidths=[col1_width, col2_width])
-                        t.setStyle(TableStyle([
+                        # Determine if image should be on the LEFT or RIGHT based on XML metadata
+                        drawing_align = para_images[0].get('align')
+                        
+                        if drawing_align == 'RIGHT':
+                            # Text on the LEFT, Image on the RIGHT
+                            data = [[Paragraph(text, p_style), img]]
+                            col_widths = [col_text_width, col_img_width]
+                            padding_settings = [
+                                ('RIGHTPADDING', (0, 0), (0, 0), 15),
+                                ('LEFTPADDING', (1, 0), (1, 0), 0),
+                            ]
+                        elif drawing_align == 'LEFT':
+                            # Image on the LEFT, Text on the RIGHT
+                            data = [[img, Paragraph(text, p_style)]]
+                            col_widths = [col_img_width, col_text_width]
+                            padding_settings = [
+                                ('RIGHTPADDING', (0, 0), (0, 0), 15),
+                                ('LEFTPADDING', (1, 0), (1, 0), 0),
+                            ]
+                        else:
+                            # Fallback to run order if no explicit XML alignment
+                            image_is_first = False
+                            for run in para.runs:
+                                if run.text.strip():
+                                    image_is_first = False
+                                    break
+                                if run._element.xpath('.//a:blip'):
+                                    image_is_first = True
+                                    break
+
+                            if image_is_first:
+                                # Image on the LEFT, Text on the RIGHT
+                                data = [[img, Paragraph(text, p_style)]]
+                                col_widths = [col_img_width, col_text_width]
+                                padding_settings = [
+                                    ('RIGHTPADDING', (0, 0), (0, 0), 15),
+                                    ('LEFTPADDING', (1, 0), (1, 0), 0),
+                                ]
+                            else:
+                                # Text on the LEFT, Image on the RIGHT
+                                data = [[Paragraph(text, p_style), img]]
+                                col_widths = [col_text_width, col_img_width]
+                                padding_settings = [
+                                    ('RIGHTPADDING', (0, 0), (0, 0), 15),
+                                    ('LEFTPADDING', (1, 0), (1, 0), 0),
+                                ]
+
+                        t = Table(data, colWidths=col_widths)
+                        base_style = [
                             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                            ('RIGHTPADDING', (0, 0), (0, 0), 10), # Space between text and image
+                            ('LEFTPADDING', (0, 0), (0, 0), 0),
                             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                        ]))
+                        ]
+                        t.setStyle(TableStyle(base_style + padding_settings))
                         self.elements.append(t)
                     except Exception as e:
                         print(f"Error adding side-by-side image: {e}")
-                        # Fallback to normal flow
                         self.elements.append(Paragraph(text, p_style))
                 
                 # Case 3: Standing Alone Image(s)
                 elif para_images and not text:
-                    for img_path in para_images:
+                    for img_data in para_images:
+                        img_path = img_data['path']
+                        size_emu = img_data['size']
                         try:
                             img = PlatypusImage(img_path)
                             aspect = img.imageHeight / float(img.imageWidth)
-                            img.drawWidth = pdf.width * 0.9
-                            img.drawHeight = img.drawWidth * aspect
+                            max_width = pdf.width * 0.9
+                            
+                            if size_emu:
+                                # 1 point = 12700 EMU
+                                width_pt = size_emu[0] / 12700.0
+                                height_pt = size_emu[1] / 12700.0
+                                if width_pt > max_width:
+                                    img.drawWidth = max_width
+                                    img.drawHeight = max_width * aspect
+                                else:
+                                    img.drawWidth = width_pt
+                                    img.drawHeight = height_pt
+                            else:
+                                if img.imageWidth > max_width:
+                                    img.drawWidth = max_width
+                                else:
+                                    img.drawWidth = img.imageWidth
+                                img.drawHeight = img.drawWidth * aspect
+                            
+                            # Determine final alignment
+                            drawing_align = img_data.get('align')
+                            if drawing_align in ['LEFT', 'CENTER', 'RIGHT']:
+                                img.hAlign = drawing_align
+                            elif para.alignment == WD_ALIGN_PARAGRAPH.CENTER:
+                                img.hAlign = 'CENTER'
+                            elif para.alignment == WD_ALIGN_PARAGRAPH.RIGHT:
+                                img.hAlign = 'RIGHT'
+                            else:
+                                img.hAlign = 'LEFT'
+                                
                             self.elements.append(img)
                             self.elements.append(Spacer(1, 15))
                         except Exception as e:
