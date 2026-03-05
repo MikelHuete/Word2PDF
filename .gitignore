@@ -7,9 +7,10 @@ env/
 venv/
 ENV/
 
-# Output files
-*.pdf
-*.docx
+# Output files (Included by user request)
+# *.pdf
+# *.docx
+
 
 # IDEs
 .vscode/
