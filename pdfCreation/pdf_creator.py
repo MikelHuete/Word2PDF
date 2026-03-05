@@ -6,6 +6,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image as PlatypusImage
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
+import tempfile
+import shutil
 
 from docx.text.paragraph import Paragraph as DocxParagraph
 from docx.table import Table as DocxTable
@@ -25,6 +27,8 @@ class PDFCreator:
         self.doc = Document(docx_path)
         self.styles = getSampleStyleSheet()
         self.elements = []
+        self.temp_dir = None
+        self.extracted_images = {}
         
         # Define Custom Styles
         self.custom_styles = {
@@ -103,10 +107,25 @@ class PDFCreator:
             return True
         return False
 
+    def extract_images(self):
+        self.temp_dir = tempfile.mkdtemp()
+        for i, rel in enumerate(self.doc.part.rels.values()):
+            if "image" in rel.target_ref:
+                img_part = rel.target_part
+                img_ext = os.path.splitext(rel.target_ref)[1]
+                img_path = os.path.join(self.temp_dir, f"img_{i}{img_ext}")
+                with open(img_path, "wb") as f:
+                    f.write(img_part.blob)
+                self.extracted_images[rel.rId] = img_path
+
+    def cleanup(self):
+        if self.temp_dir and os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+
     def draw_cover(self, canvas, doc):
         canvas.saveState()
         if self.img1_path and os.path.exists(self.img1_path):
-            canvas.drawImage(self.img1_path, 0, 0, width=800, height=A4[1])
+            canvas.drawImage(self.img1_path, 0, 0, width=A4[0], height=A4[1])
         canvas.restoreState()
 
     def process_table(self, table, pdf_width):
@@ -135,6 +154,7 @@ class PDFCreator:
         return t
 
     def create_pdf(self):
+        self.extract_images()
         pdf = SimpleDocTemplate(self.output_path, pagesize=A4, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
         
         first_title = True
@@ -143,31 +163,87 @@ class PDFCreator:
         for block in self.doc.element.body:
             if block.tag.endswith('p'):
                 para = DocxParagraph(block, self.doc)
+                
+                # Collect images in this paragraph
+                para_images = []
+                for run in para.runs:
+                    blips = run._element.xpath('.//a:blip')
+                    for blip in blips:
+                        rId = blip.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed')
+                        if rId in self.extracted_images:
+                            para_images.append(self.extracted_images[rId])
+
                 text = para.text.strip()
-                if not text:
-                    self.elements.append(Spacer(1, 10))
-                    continue
-                    
                 style_name = para.style.name
                 
+                # Determine paragraph style
                 if self.is_bullet_style(para):
                     p_style = self.custom_styles["List Bullet"]
-                    if not text.startswith(('•', '-', '*')):
+                    if text and not text.startswith(('•', '-', '*')):
                         text = f"• {text}"
                 elif style_name in self.custom_styles:
                     p_style = self.custom_styles[style_name]
                 else:
                     p_style = self.custom_styles["Normal"]
-                
+
+                # Case 1: Title Cover
                 if style_name == "Title" and first_title:
-                    self.elements.append(Spacer(1, 250)) 
+                    self.elements.append(Spacer(1, 230)) 
                     self.elements.append(Paragraph(text, self.custom_styles["TitleCover"]))
                     self.elements.append(PageBreak())
                     first_title = False
                     continue
 
-                self.elements.append(Paragraph(text, p_style))
-                if "Heading" in style_name:
+                # Case 2: Side-by-Side (Text + Image)
+                if text and para_images:
+                    img_path = para_images[0] # Use the first image for side-by-side
+                    try:
+                        img = PlatypusImage(img_path)
+                        aspect = img.imageHeight / float(img.imageWidth)
+                        
+                        # Calculate widths for 2-column layout (65% text, 35% image)
+                        col1_width = pdf.width * 0.62
+                        col2_width = pdf.width * 0.35
+                        
+                        img.drawWidth = col2_width
+                        img.drawHeight = col2_width * aspect
+                        
+                        # Create a table for side-by-side
+                        data = [[Paragraph(text, p_style), img]]
+                        t = Table(data, colWidths=[col1_width, col2_width])
+                        t.setStyle(TableStyle([
+                            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                            ('RIGHTPADDING', (0, 0), (0, 0), 10), # Space between text and image
+                            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                        ]))
+                        self.elements.append(t)
+                    except Exception as e:
+                        print(f"Error adding side-by-side image: {e}")
+                        # Fallback to normal flow
+                        self.elements.append(Paragraph(text, p_style))
+                
+                # Case 3: Standing Alone Image(s)
+                elif para_images and not text:
+                    for img_path in para_images:
+                        try:
+                            img = PlatypusImage(img_path)
+                            aspect = img.imageHeight / float(img.imageWidth)
+                            img.drawWidth = pdf.width * 0.9
+                            img.drawHeight = img.drawWidth * aspect
+                            self.elements.append(img)
+                            self.elements.append(Spacer(1, 15))
+                        except Exception as e:
+                            print(f"Error adding standalone image: {e}")
+
+                # Case 4: Text Only
+                elif text:
+                    self.elements.append(Paragraph(text, p_style))
+                    if "Heading" in style_name:
+                        self.elements.append(Spacer(1, 10))
+
+                # Case 5: Empty line
+                elif not text and not para_images:
                     self.elements.append(Spacer(1, 10))
 
             elif block.tag.endswith('tbl'):
@@ -176,8 +252,11 @@ class PDFCreator:
                 self.elements.append(self.process_table(table, pdf.width))
                 self.elements.append(Spacer(1, 15))
 
-        pdf.build(self.elements, onFirstPage=self.draw_cover)
-        print(f"PDF Successfully created at: {self.output_path}")
+        try:
+            pdf.build(self.elements, onFirstPage=self.draw_cover)
+            print(f"PDF Successfully created at: {self.output_path}")
+        finally:
+            self.cleanup()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convierte un archivo DOCX a un PDF con estilo personalizado.")
@@ -207,8 +286,9 @@ if __name__ == "__main__":
         # Try to find default cover in common locations
         img1_candidates = [
             os.path.join(os.path.dirname(os.path.abspath(input_file)), "portada.jpg"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "portada.jpg"),
+            os.path.join("doc2pdf", "pdfCreation", "portada.jpg"),
             os.path.join("pdfCreation", "portada.jpg"),
-            os.path.join("extracted_media", "word", "media", "portada.jpg")
         ]
         for candidate in img1_candidates:
             if os.path.exists(candidate):
