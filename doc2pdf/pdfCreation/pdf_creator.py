@@ -367,14 +367,41 @@ class PDFCreator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convierte un archivo DOCX a un PDF con estilo personalizado.")
-    parser.add_argument("input", help="Ruta al archivo .docx de entrada")
+    parser.add_argument("input", nargs="?", help="Ruta al archivo .docx de entrada")
     parser.add_argument("-o", "--output", help="Ruta de salida para el PDF (por defecto [input].pdf)")
     parser.add_argument("--cover", help="Ruta a la imagen de portada")
     
     args = parser.parse_args()
     
     input_file = args.input
+
+    # Si no se proporciona archivo por argumento, abrir ventana de selección
+    if not input_file:
+        try:
+            import tkinter as tk
+            from tkinter import filedialog
+            
+            root = tk.Tk()
+            root.withdraw() # Ocultar la ventana principal de tkinter
+            root.attributes("-topmost", True) # Asegurar que aparezca encima
+            
+            print("Seleccione el archivo Word (.docx) que desea convertir...")
+            input_file = filedialog.askopenfilename(
+                title="Seleccionar archivo Word",
+                filetypes=[("Archivos de Word", "*.docx"), ("Todos los archivos", "*.*")]
+            )
+            root.destroy()
+            
+            if not input_file:
+                print("No se seleccionó ningún archivo. Saliendo...")
+                exit(0)
+        except Exception as e:
+            print(f"Error al abrir el selector de archivos: {e}")
+            print("Por favor, pase el archivo como argumento: python pdf_creator.py archivo.docx")
+            exit(1)
+    
     if not os.path.exists(input_file):
+
         print(f"Error: No se encontró el archivo de entrada {input_file}")
         exit(1)
         

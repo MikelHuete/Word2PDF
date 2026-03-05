@@ -59,11 +59,22 @@ python inspection/docx_inspector.py
 *Nota: El script está configurado para procesar `1. Artificial Intelligence - Copia.docx` por defecto.*
 
 ### Crear PDF Estilizado
-Ejecuta el script desde la carpeta raíz:
-```bash
-python pdfCreation/pdf_creator.py
-```
-El PDF se generará en `pdfCreation/generated_styled.pdf`.
+
+Puedes generar el PDF de dos formas:
+
+1. **Modo Interactivo (Recomendado)**:
+   Si ejecutas el script sin argumentos, se abrirá una ventana para que selecciones el archivo `.docx` desde tu ordenador:
+   ```bash
+   python doc2pdf/pdfCreation/pdf_creator.py
+   ```
+
+2. **Modo Línea de Comandos**:
+   Puedes especificar el archivo directamente:
+   ```bash
+   python doc2pdf/pdfCreation/pdf_creator.py "tu_archivo.docx"
+   ```
+   *También puedes usar `-o` para definir el nombre del PDF de salida.*
+
 
 ---
 *Desarrollado para la gestión inteligente de documentación técnica.*
