@@ -8,6 +8,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import tempfile
 import shutil
+from google import genai
+from html2image import Html2Image
 
 from docx.text.paragraph import Paragraph as DocxParagraph
 from docx.table import Table as DocxTable
@@ -19,8 +21,79 @@ NAVY_TEXT = "#232D4B"
 WHITE = "#FFFFFF"
 YELLOW = "#FCEE21"
 
+class InfographicGenerator:
+    def __init__(self, api_key=None):
+        try:
+            api_key_to_use = api_key or os.environ.get("GEMINI_API_KEY", "")
+            
+            # Buscar en un archivo de texto local si no hay clave todavía
+            if not api_key_to_use:
+                key_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api_key.txt")
+                if os.path.exists(key_file_path):
+                    with open(key_file_path, "r", encoding="utf-8") as f:
+                        api_key_to_use = f.read().strip()
+                        
+            if api_key_to_use:
+                self.client = genai.Client(api_key=api_key_to_use)
+            else:
+                # Fallback, intentará funcionar sin clave (dará error si es necesaria)
+                self.client = genai.Client()
+                print("Aviso: No se proporcionó API Key de Gemini ni se encontró en 'api_key.txt'.")
+                
+        except Exception as e:
+            self.client = None
+            print(f"Warning: Could not initialize Gemini client: {e}")
+            
+    def generate(self, text, output_path):
+        if not self.client:
+            print("Error: Gemini client not initialized. Skipping infographic generation.")
+            return False
+            
+        prompt = (
+            "Act as a professional UI/UX Designer. Generate a SINGLE HTML file for a vertical infographic (width: 600px).\n"
+            "DIRECTIONS:\n"
+            f"1. ANALYZE this text and extract 3 to 5 key points: {text}\n"
+            "2. DESIGN: Use a clean, corporate style. Background color must be white (#ffffff) or very light blue (#f8fafc).\n"
+            "3. LAYOUT: Create a vertical stack of cards. Each card should have:\n"
+            "   - A subtle border or soft shadow.\n"
+            "   - A professional SVG icon (colored in #1e3a8a) on the left.\n"
+            "   - A bold title and a short descriptive paragraph on the right.\n"
+            "4. COLORS: Use #1e3a8a (Dark Blue) for titles/icons and #64748b (Slate Gray) for text.\n"
+            "5. TECHNICAL: Return ONLY the raw HTML code. Include CSS in <style> tags. "
+            "IMPORTANT: Set '* { box-sizing: border-box; } body { width: 600px; margin: 0; padding: 20px; background-color: #ffffff; }' to avoid black backgrounds and right-side clipping. Do not use widths larger than 100% or 600px.\n"
+            "6. DO NOT include markdown code blocks (```html) or any conversational text."
+        )
+        
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            html_content = response.text
+            
+            # Clean up potential markdown formatting
+            if html_content.startswith('```html'):
+                html_content = html_content[7:]
+            if html_content.startswith('```'):
+                html_content = html_content[3:]
+            if html_content.endswith('```'):
+                html_content = html_content[:-3]
+                
+            html_content = html_content.strip()
+            
+            out_dir = os.path.dirname(os.path.abspath(output_path))
+            filename = os.path.basename(output_path)
+            
+            hti = Html2Image(output_path=out_dir)
+            hti.screenshot(html_str=html_content, save_as=filename, size=(600, 1200))
+            
+            return True
+        except Exception as e:
+            print(f"Error generating infographic: {e}")
+            return False
+
 class PDFCreator:
-    def __init__(self, docx_path, output_path, img1_path=None, img2_path=None):
+    def __init__(self, docx_path, output_path, img1_path=None, img2_path=None, api_key=None):
         self.docx_path = docx_path
         self.output_path = output_path
         self.img1_path = img1_path
@@ -30,6 +103,11 @@ class PDFCreator:
         self.elements = []
         self.temp_dir = None
         self.extracted_images = {}
+        
+        self.capturing_info = False
+        self.info_buffer = ""
+        self.infographic_generator = InfographicGenerator(api_key=api_key)
+        self.infographic_counter = 0
         
         # Define Custom Styles
         self.custom_styles = {
@@ -211,6 +289,51 @@ class PDFCreator:
                 text = para.text.strip()
                 style_name = para.style.name
                 
+                if "[[GENERAR_INFOGRAFIA]]" in text:
+                    self.capturing_info = True
+                    self.info_buffer = ""
+                    continue
+                
+                if "[[FIN_INFOGRAFIA]]" in text:
+                    self.capturing_info = False
+                    if self.info_buffer.strip():
+                        self.infographic_counter += 1
+                        info_img_path = os.path.join(self.temp_dir, f"infographic_{self.infographic_counter}.png")
+                        print(f"Generando infografía {self.infographic_counter} con Gemini...")
+                        success = self.infographic_generator.generate(self.info_buffer, info_img_path)
+                        if success and os.path.exists(info_img_path):
+                            try:
+                                img = PlatypusImage(info_img_path)
+                                aspect = img.imageHeight / float(img.imageWidth)
+                                max_width = pdf.width * 0.9
+                                max_height = pdf.height * 0.85
+                                
+                                if img.imageWidth > max_width:
+                                    img.drawWidth = max_width
+                                else:
+                                    img.drawWidth = img.imageWidth
+                                img.drawHeight = img.drawWidth * aspect
+                                
+                                if img.drawHeight > max_height:
+                                    img.drawHeight = max_height
+                                    img.drawWidth = img.drawHeight / aspect
+                                img.hAlign = 'CENTER'
+                                
+                                self.elements.append(Spacer(1, 15))
+                                self.elements.append(img)
+                                self.elements.append(Spacer(1, 15))
+                            except Exception as e:
+                                print(f"Error añadiendo infografía al PDF: {e}")
+                        else:
+                            print("Aviso: No se pudo generar o encontrar la imagen de la infografía.")
+                    self.info_buffer = ""
+                    continue
+
+                if self.capturing_info:
+                    if text:
+                        self.info_buffer += text + "\n"
+                    continue
+                
                 # Determine paragraph style
                 if self.is_bullet_style(para):
                     p_style = self.custom_styles["List Bullet"]
@@ -370,6 +493,7 @@ if __name__ == "__main__":
     parser.add_argument("input", nargs="?", help="Ruta al archivo .docx de entrada")
     parser.add_argument("-o", "--output", help="Ruta de salida para el PDF (por defecto [input].pdf)")
     parser.add_argument("--cover", help="Ruta a la imagen de portada")
+    parser.add_argument("--api-key", help="API Key de Gemini para la generación de infografías")
     
     args = parser.parse_args()
     
@@ -433,5 +557,5 @@ if __name__ == "__main__":
         print(f"Aviso: No se encontró la imagen de portada en {img1}. Se generará el PDF sin ella.")
         img1 = None
         
-    creator = PDFCreator(input_file, output_file, img1_path=img1)
+    creator = PDFCreator(input_file, output_file, img1_path=img1, api_key=args.api_key)
     creator.create_pdf()
