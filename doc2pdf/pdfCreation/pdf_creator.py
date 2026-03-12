@@ -66,20 +66,18 @@ class NotebookLMGenerator:
         return None
 
     def build_infographic_focus_prompt(self, template_path=None):
-        """Construye el prompt de estilo para la generación de la infografía."""
-        reference_hint = ""
-        if template_path:
-            reference_hint = (
-                f" Inspírate en el estilo visual de la imagen de referencia '{os.path.basename(template_path)}':"
-                " composición modular, jerarquía clara, bloques limpios, iconografía sencilla,"
-                " paleta corporativa y acabado profesional."
-                " No copies literalmente el texto ni los elementos de esa imagen."
-            )
+        if not template_path:
+            return "Genera una infografía ejecutiva visual."
+
+        # Aquí especificamos que la imagen NO es contenido, sino ESTRUCTURA
         return (
-            "Genera una infografía ejecutiva muy visual y fácil de leer a partir del contenido del documento."
-            f"{reference_hint}"
-            " Prioriza títulos cortos, secciones bien diferenciadas, buen contraste visual"
-            " y síntesis clara de las ideas clave."
+            f"USA ESTRICTAMENTE la estructura visual de '{os.path.basename(template_path)}'. "
+            "Actúa como un diseñador gráfico que debe replicar el layout: "
+            "1. Mantén la misma disposición de bloques y cajas que ves en la imagen. "
+            "2. Usa la misma jerarquía de fuentes (tamaños y grosores). "
+            "3. Respeta la paleta de colores corporativos de la imagen. "
+            "4. Distribuye el texto del documento DOCX dentro de los contenedores visuales "
+            "exactamente donde la plantilla propone los espacios de información."
         )
 
     def get_profiles(self):
