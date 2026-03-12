@@ -56,8 +56,8 @@ class NotebookLMGenerator:
     def resolve_style_template_path(self, docx_path):
         """Localiza infografias_plantilla.jpg junto al .docx o en la raíz del proyecto."""
         candidates = [
-            os.path.join(os.path.dirname(os.path.abspath(docx_path)), "infografias_plantilla.jpg"),
-            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "infografias_plantilla.jpg"),
+            os.path.join(os.path.dirname(os.path.abspath(docx_path)), "Plantilla.png"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Plantilla.png"),
         ]
         for candidate in candidates:
             candidate_path = os.path.abspath(candidate)
@@ -236,8 +236,24 @@ class NotebookLMGenerator:
                 print("    -> ERROR: No se pudo subir la fuente de datos.")
                 return False
 
+            if style_template_path:
+                temp_style_txt = os.path.join(tempfile.gettempdir(), "instrucciones_estilo.txt")
+                instrucciones_template = (
+                    f"REGLA DE ORO DE DISEÑO: La imagen '{os.path.basename(style_template_path)}' "
+                    "es la única plantilla permitida. Tiene un encabezado superior, "
+                    "tres columnas de datos y un pie de página con iconos. "
+                    "Cualquier infografía generada DEBE encajar en este esquema visual sin excepciones."
+                )
+                try:
+                    with open(temp_style_txt, "w", encoding="utf-8") as f:
+                        f.write(instrucciones_template)
+                    self.run_safe_cmd(["nlm", "source", "add", notebook_id, "--file", temp_style_txt])
+                    print("    -> Instrucciones de diseño vinculadas con éxito.")
+                finally:
+                    if os.path.exists(temp_style_txt): os.remove(temp_style_txt)
+
             print("    -> Sincronización completa.")
-            time.sleep(20)
+            time.sleep(25) # Un poco más de tiempo para procesar el texto extraº
 
             # Subir imagen de referencia de estilo si existe
             if style_template_path:
@@ -626,7 +642,24 @@ if __name__ == "__main__":
     docx_file = args.input if args.input else select_file()
 
     if docx_file and os.path.exists(docx_file):
-        output = args.output or os.path.splitext(docx_file)[0] + ".pdf"
+        # Determine the project root (where doc2pdf is)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(script_dir))
+        
+        # Create PDF directory at project root
+        output_dir = os.path.join(project_root, "PDF")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        if args.output:
+            # If output is just a filename, put it in the PDF folder
+            if not os.path.dirname(args.output):
+                output = os.path.join(output_dir, args.output)
+            else:
+                output = args.output
+        else:
+            filename = os.path.splitext(os.path.basename(docx_file))[0] + ".pdf"
+            output = os.path.join(output_dir, filename)
 
         img1 = args.cover
         if not img1:

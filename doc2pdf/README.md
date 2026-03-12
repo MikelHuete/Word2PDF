@@ -32,8 +32,8 @@ doc2pdf/
 │   └── extracted_media/      # Imágenes extraídas del docx
 ├── pdfCreation/
 │   ├── pdf_creator.py        # Generador principal de PDF
-│   ├── generated_styled.pdf  # Resultado final en PDF
 │   └── portada.jpg           # Imagen de fondo para la portada
+├── PDF/                      # Carpeta de salida para los PDFs generados
 └── README.md                 # Documentación del proyecto
 ```
 
@@ -73,7 +73,7 @@ Puedes generar el PDF de dos formas:
    ```bash
    python doc2pdf/pdfCreation/pdf_creator.py "tu_archivo.docx"
    ```
-   *También puedes usar `-o` para definir el nombre del PDF de salida.*
+   *También puedes usar `-o` para definir el nombre del PDF de salida. Por defecto, los PDFs se guardan en la carpeta `/PDF` en la raíz del proyecto.*
 
 
 ---
